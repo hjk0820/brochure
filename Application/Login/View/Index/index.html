@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><{:C('SITE_TITLE')}></title>
+    <link rel="stylesheet" href="__PUBLIC__/js/antd/antd.min.css">
+    <link rel="stylesheet" href="__PUBLIC__/css/login.css">
+    <!--[if lt IE 10]>
+    <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+    <![endif]-->
+    <script src="__PUBLIC__/js/reactjs/react/react.min.js"></script>
+    <script src="__PUBLIC__/js/reactjs/react-dom/react-dom.js"></script>
+    <script src="__PUBLIC__/js/browser.min.js"></script>
+    <script src="__PUBLIC__/js/antd/antd.min.js"></script>
+    <script src="__PUBLIC__/js/jquery.min.js"></script>
+</head>
+<body>
+<div id="login" style="background: url(__PUBLIC__/images/<{$bgimg}>) 50% 50% / 100% no-repeat;"></div>
+<script type="text/babel">
+var {message, Form, Input, Button} = antd,
+FormItem = Form.Item,
+App = React.createClass({
+    getInitialState() {
+        return {
+          loading: false,
+        };
+    },
+    handleSubmit(e) {
+        e.preventDefault();
+        this.props.form.validateFieldsAndScroll(function(errors, values) {
+            if (!!errors) {
+                return;
+            }
+            this.setState({ loading: true  });
+            $.ajax({
+                type: "POST",
+                url: "__SELF__",
+                data: values,
+                success: function(json){ 
+                    message[json.status](json.msg);
+                    if (json.status === 'success') {
+                        window.location.href = '/';
+                    }
+                    this.setState({ loading: false  }); 
+                }.bind(this),
+                error: function(){
+                    message.error('服务器开了一会小差，稍后重试。');
+                    this.setState({ loading: false  }); 
+                }.bind(this)
+            });
+        }.bind(this));
+    },
+    render() {
+        var { getFieldProps } = this.props.form,
+        noop = function(){return false;};
+        return (
+            <div className="centerPart">
+            <Form inline onSubmit={this.handleSubmit} form={this.props.form}>
+                <FormItem label="账户">
+                    <Input placeholder="请输入账户名" {...getFieldProps('username', {rules: [{ required: true, whitespace: true, message: '请输入账户名' }]})} autoComplete="off" />
+                </FormItem>
+                <FormItem label="密码">
+                    <Input type="password" placeholder="请输入密码" {...getFieldProps('password', {rules: [{ required: true, whitespace: true, min: 6, message: '登陆密码至少为 6 个字符'}]})} autoComplete="off" onContextMenu={noop} onPaste={noop} onCopy={noop} onCut={noop} />
+                </FormItem>
+                <Button type="primary" loading={this.state.loading} className="ant-btn-lg" htmlType="submit">登录</Button>
+            </Form>
+            </div>
+        );
+    },
+});
+App = Form.create()(App);
+ReactDOM.render(
+    <App />,
+    document.getElementById('login')
+);
+</script>
+</body>
+</html>

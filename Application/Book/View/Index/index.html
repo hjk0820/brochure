@@ -1,0 +1,346 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title><{$company['title']}></title>
+  
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <!--<link rel="icon" type="image/png" href="__PUBLIC__/images/favicon.png">-->
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <!--<link rel="icon" sizes="192x192" href="__PUBLIC__/images/app-icon72x72@2x.png">-->
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <!--<link rel="apple-touch-icon-precomposed" href="__PUBLIC__/images/app-icon72x72@2x.png">-->
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <!--<meta name="msapplication-TileImage" content="__PUBLIC__/images/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">-->
+
+  <link rel="stylesheet" href="__AMAZEUI__/css/amazeui.min.css">
+  <link rel="stylesheet" href="__PUBLIC__/css/app.css">
+</head>
+<body>
+<!--扫描二维码大图-->
+<notempty name="nrs['image']">
+<div class="am-g">
+	<img src="<{:$nrs['image']}>" class="am-img-responsive" alt="<{:$nrs['title']}>"/>
+</div>
+</notempty>
+<!--公司简介-->
+<div id="about-container">
+    <div data-am-widget="intro" class="am-intro am-cf am-intro-default">
+        <div class="am-intro-hd">
+          <h1 class="am-intro-title"><{$company['title']}></h1>
+        </div>
+        <div class="am-g am-intro-bd">
+            &nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;
+            <{$company['slogan']}>
+        </div>
+    </div>
+</div>
+<!--产品展示-->
+<div id="products-container">
+    <volist name="products" id="item">
+        <div class="am-g">
+            <div data-am-widget="intro" class="am-intro am-cf am-intro-default">
+                <div class="am-intro-hd">
+                  <h1 class="am-intro-title"><{$item['title']}></h1>
+                </div>
+            </div>
+            <div data-am-widget="slider" class="am-slider am-slider-d3" data-am-slider='{"slideshow":false,"controlNav":"thumbnails","directionNav":false}' >
+            <div class="select"><i data-id="<{$item['id']}>" class="am-icon-square-o"></i></div>
+            <ul class="am-slides">
+                <volist name="item['imglist']" id="img">
+                    <li data-thumb="<{$img}>">
+                          <img src="<{$img}>">
+                    </li>
+                </volist>
+            </ul>
+            </div> 
+        </div>
+    </volist>
+</div>
+<!--报价单模板-->
+<div class="am-modal am-modal-confirm" id="price-confirm">
+  <div class="am-modal-dialog">
+    <div class="am-modal-hd">Fill Quote</div>
+    <div class="am-modal-bd">
+        <table class="am-table am-table-bordered am-text-nowrap">
+            <tr>
+            	<td class="column">Item No</td>
+            	<td class="input"><input type="text" name="no" class="am-form-field"></td>
+            </tr>
+            <tr>
+            	<td class="column">Fob Price</td>
+                <td class="input"><input type="text" name="price" class="am-form-field"></td>
+            </tr>
+            <tr>
+            	<td class="column">Size</td>
+                <td class="input"><input type="text" name="size" class="am-form-field"></td>
+            </tr>
+            <tr>
+            	<td class="column">Remark</td>
+                <td class="input"><input type="text" name="remark" class="am-form-field"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="am-modal-footer">
+      <span class="am-modal-btn" data-am-modal-cancel>Cancel</span>
+      <span class="am-modal-btn" data-am-modal-confirm>Save</span>
+    </div>
+  </div>
+</div>
+<!--选择业务员-->
+<div class="am-modal am-modal-confirm" id="staff-confirm">
+  <div class="am-modal-dialog">
+    <div class="am-modal-hd">Send email</div>
+    <div class="am-modal-bd">
+    	<form class="am-form">
+		<div class="am-form-group" id="form-group-staff" style="margin-bottom:0;">
+			<select id="staff" class="am-form-field">
+				<option value="0">Choose clerk</option>
+				<volist name="staff" id="item">
+					<option value="<{$item['id']}>"><{$item['name']}></option>
+				</volist>
+			</select>
+			<span class="am-form-caret"></span>
+		</div>
+		</form>
+    </div>
+    <div class="am-modal-footer">
+      <span class="am-modal-btn" data-am-modal-cancel>Cancel</span>
+      <span class="am-modal-btn" data-am-modal-confirm>Save</span>
+    </div>
+  </div>
+</div>
+<!--对话框-->
+<div class="am-modal am-modal-alert" id="dialog-alert">
+  <div class="am-modal-dialog">
+    <div class="am-modal-hd">Prompt</div>
+    <div class="am-modal-bd">
+       ...
+    </div>
+    <div class="am-modal-footer">
+      <span class="am-modal-btn">Confirm</span>
+    </div>
+  </div>
+</div>
+<!--页脚-->
+<footer class="am-footer am-footer-default">
+	<div class="am-footer-miscs">
+    	<{:C('SITE_FOOTER')}>
+	</div>
+</footer>
+<!--发送邮件-->
+<div id="email-container">
+    <div class="am-g">
+    <form class="am-form-inline">
+        <div class="am-form-group am-form-icon am-u-sm-8">
+        	<i class="am-icon-envelope"></i>
+          	<input type="text" name="email" class="am-form-field" placeholder="Enter your email">
+        </div>
+        <button type="button" class="am-btn am-btn-primary am-u-sm-4"><span id="sent-email">Send email</span><span class="am-badge am-badge-secondary am-round"></span></button>
+    </form>
+    </div>
+</div>
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="__AMAZEUI__/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="__AMAZEUI__/js/jquery.1.11.3.min.js"></script>
+<script src="__AMAZEUI__/js/modernizr.js"></script>
+<script src="__AMAZEUI__/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="__AMAZEUI__/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+	var data = [],
+	    $no = $('input[name="no"]'),
+		$price = $('input[name="price"]'),
+		$size = $('input[name="size"]'),
+		$remark = $('input[name="remark"]'),
+	setnum = function() {
+		var num = 0;
+		$.each(data, function(i, n) {
+			if (n.state == 1) {
+				num++;
+			}
+		});
+		if (num) {
+			$('#email-container').find('.am-badge').html(num);
+		} else {
+			$('#email-container').find('.am-badge').html('');
+		}
+	},
+	check = function(id, type) {
+		var result = false;
+		$.each(data, function(i, n) {
+			if (n.id == id) {//修改缓存
+				if (type == 'index') {
+					result = i;
+					return;
+				} else if (type == 'value') {
+					result = n;
+					return;
+				} else if (type == 'boolean') {
+					result = true;
+					return;
+				}
+			}
+	  });
+	  return result;
+	},
+	setdata = function(id, state) {
+		var index = check(id, 'index'),
+			items = {id:id, state:0, no:'', price:'', size:'', remark:''};
+		if (index !== false) {//修改缓存
+		  data[index]['state'] = state ? 1 : 0;
+		  data[index]['no'] = $no.val();
+		  data[index]['price'] = $price.val();
+		  data[index]['size'] = $size.val();
+		  data[index]['remark'] = $remark.val();
+		} else {//新增
+		  items.state = state ? 1 : 0;
+		  items.no = $no.val();
+		  items.price = $price.val();
+		  items.size = $size.val();
+		  items.remark = $remark.val();
+		  data.push(items);
+		}
+	},
+	_validdata = function() {
+		var _data = [];
+		$.each(data, function(i, n) {
+			if (n.state == 1) {//有效数据
+				_data.push(n);
+			}
+		});
+		return _data;
+	},
+	priceconfirm = function(icon){
+		$('#price-confirm').modal({
+			relatedTarget: icon, //hack
+			closeViaDimmer: false,
+			onConfirm: function() {//保存
+				setdata(this.relatedTarget.data('id'), 1);
+				this.relatedTarget.removeClass('am-icon-square-o').addClass('am-icon-check-square-o');
+				setnum();
+			},
+			onCancel: function() {//取消
+				setdata(this.relatedTarget.data('id'), 0);
+			},
+		});
+	},
+	dialog = function(title, msg, show) {
+		$('#dialog-alert .am-modal-hd').html(title);
+		$('#dialog-alert .am-modal-bd').html(msg);
+		if (show == 'hide') {
+	    	$('#dialog-alert .am-modal-footer').hide();
+		} else {
+			$('#dialog-alert .am-modal-footer').show();
+		}
+		$('#dialog-alert').modal({closeViaDimmer: false});
+	};
+	//产品操作
+	$('#products-container .select').on('click', function(){
+		var cache,
+		    icon = $(this).find('i'),
+		    id = icon.data('id');
+		if (icon.hasClass('am-icon-square-o')) {//选中
+			cache = check(id, 'value');
+			if (cache) {//取缓存
+				$no.val(cache.no);
+				$price.val(cache.price);
+				$size.val(cache.size);
+				$remark.val(cache.remark);
+			} else {//重置
+				$no.val('');
+				$price.val('');
+				$size.val('');
+				$remark.val('');
+			}
+		    priceconfirm(icon);
+		} else if (icon.hasClass('am-icon-check-square-o')) {//取消选中
+			data[check(id, 'index')]['state'] = 0;
+			setnum();
+			icon.removeClass('am-icon-check-square-o').addClass('am-icon-square-o');
+		}
+	});
+	//发送邮件
+	$('#email-container button').on('click', function() {
+		var validdata = _validdata(),
+		    email = $('input[name="email"]');
+		if ($.trim(email.val()) == '') {
+		    email.focus();	
+		} else if (/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(email.val()) == false) {
+		    dialog('Prompt', 'Mail format is incorrect, please check and fill.');
+		} else if (validdata.length < 1) {
+			dialog('Prompt', 'Shopping Cart no products Oh, go and buy it.');
+		} else {
+			$('#staff-confirm').modal({//选择业务员
+				relatedTarget: validdata, //hack
+				closeViaDimmer: false,
+				closeOnConfirm: false,
+				onConfirm: function() {
+					var staff = $('#staff');
+					if (staff.val() == '0') {
+						$('#form-group-staff').addClass('am-form-error');
+						return false;
+					}
+					//提交数据
+				    dialog('Sending a message...', '<span class="am-icon-spinner am-icon-spin"></span>', 'hide');
+					$.ajax({
+						type: "POST",
+						url: "<{:U('Index/sent')}>",
+						data: {data:this.relatedTarget,email:$.trim(email.val()),sid:$.trim(staff.val())},
+						success: function(json) {
+							if (json.status == 1) {
+								data = [];
+								setnum();
+								email.val('');
+								$('#products-container .select i').removeClass('am-icon-check-square-o').addClass('am-icon-square-o');
+                                staff.val("0");
+								$('#dialog-alert .am-modal-hd').html('Congratulation');
+								$('#dialog-alert .am-modal-bd').html(json.msg);
+								$('#staff-confirm').find('[data-am-modal-cancel]').trigger('click');
+							} else {
+								$('#dialog-alert .am-modal-hd').html('Prompt');
+								$('#dialog-alert .am-modal-bd').html(json.msg);
+							}
+							setTimeout(function(){
+		                    	$('#dialog-alert .am-modal-btn').trigger('click');
+							}, 3000);
+						},
+						error: function() {
+							$('#dialog-alert .am-modal-hd').html('Prompt');
+							$('#dialog-alert .am-modal-bd').html('The server will open a small difference, please try again later.');
+							setTimeout(function(){
+		                    	$('#dialog-alert .am-modal-btn').trigger('click');
+							}, 3000);
+						}
+					});
+				}
+			});
+			validdata = [];
+		}
+	});
+    $('#staff').on('change',function(){
+    	$('#form-group-staff').removeClass('am-form-error');
+    });
+});
+</script>
+</body>
+</html>

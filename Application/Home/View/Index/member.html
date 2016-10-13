@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><{:C('SITE_TITLE')}></title>
+    <link rel="stylesheet" href="__PUBLIC__/js/antd/antd.min.css">
+    <link rel="stylesheet" href="__PUBLIC__/css/app.css">
+    <!--[if lt IE 10]>
+    <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+    <![endif]-->
+    <script src="__PUBLIC__/js/reactjs/react/react.min.js"></script>
+    <script src="__PUBLIC__/js/reactjs/react-dom/react-dom.js"></script>
+    <script src="__PUBLIC__/js/browser.min.js"></script>
+    <script src="__PUBLIC__/js/antd/antd.min.js"></script>
+    <script src="__PUBLIC__/js/jquery.min.js"></script>
+</head>
+<body>
+<div id="react-content"></div>
+<script type="text/babel">
+var { Row ,Col ,Menu ,Icon ,Button ,Modal,Card,Spin } = antd,
+Exit = React.createClass({
+  handleClick() {
+  Modal.confirm({
+    title: '确定要退出系统吗？',
+    onOk() {
+     window.location.href = '/Login/Out/Index';
+    },
+    onCancel() {},
+  });
+  },
+  render() {
+    return (
+      <div id="nav-exit"><a onClick={this.handleClick}>退出系统</a></div>
+    );
+  },
+}),
+Header = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.MODULE_NAME}>',
+    };
+  },
+  render() {
+  var modules = <{$modules}>;
+    return (
+      <div id="header" className="clearfix home-nav-white">
+          <Row>
+              <Col span="4">
+                  <a id="logo" href="/">
+                      <img alt="logo" src="__PUBLIC__/images/logo.svg" />
+                      <span><{:C('SITE_TITLE')}></span>
+                  </a>
+              </Col>
+              <Col span="20">
+                  <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="horizontal" id="nav">
+                      { modules.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}>{item.title}</a></Menu.Item> }) }
+                  </Menu>
+                <Exit />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Main = React.createClass({
+    getInitialState() {
+        return {
+            loginContent: '',
+            totalProduct: '--',
+            totalEmail: '--',
+            monthEmail: '--',
+            statistics:[],
+            loading: true,
+        };
+    },
+    componentDidMount() {
+        $.ajaxSettings.async = true;
+        $.getJSON('/Home/Index/member', function(json){
+            var loginContent = <Row>
+                    <Col span="24">
+                        <label>本次登录IP：</label>{json.login.currentip}
+                    </Col>
+                    <Col span="24" style={{marginTop:8}}>
+                        <label>本次登录时间：</label>{json.login.currenttime}
+                    </Col>
+                    <Col span="24" style={{marginTop:8}}>
+                        <label>上次登录IP：</label>{json.login.lastip}
+                    </Col>
+                    <Col span="24" style={{marginTop:8}}>
+                        <label>上次登录时间：</label>{json.login.lasttime}
+                    </Col>
+                    <Col span="24" style={{marginTop:16,fontWeight:'bold'}}>
+                        提示：为了账号的安全，如果上面的登录情况不正常，建议您马上 <a href="/Info/Password/index">修改密码</a>。
+                    </Col>
+                </Row>,
+                smtpContent = <Row>
+                    <Col span="24">
+                        <label>邮件服务器：</label>{json.smtp.host}
+                    </Col>
+                    <Col span="24" style={{marginTop:8}}>
+                        <label>邮件服务器端口：</label>{json.smtp.port}
+                    </Col>
+                    <Col span="24" style={{marginTop:8}}>
+                        <label>邮箱账号：</label>{json.smtp.username}
+                    </Col>
+                    <Col span="24" className="red" style={{marginTop:8}}>
+                        确保账号SMTP服务开启，才能正常推送邮件。
+                    </Col>
+                    <Col span="24" style={{marginTop:16,fontWeight:'bold'}}>
+                        邮件服务器信息如果没有配置将使用系统默认的邮件转发配置，<a href="/System/Index/index">点击修改</a>。
+                    </Col>
+                </Row>;
+            this.setState({loginContent:loginContent,
+                totalProduct:json.totalProduct,
+                totalEmail:json.totalEmail,
+                monthEmail:json.monthEmail,
+                smtpContent:smtpContent,
+                statistics:json.statistics,
+                loading:false
+            });
+        }.bind(this));
+    },
+    render() {
+    var loginTitle = <span><Icon type="home" /> 当前登录情况</span>,
+    smtpTitle = <span><Icon type="setting" /> 邮件服务器配置</span>,
+    statisticsTitle = <span><Icon type="bar-chart" /> 邮件发送统计</span>;
+    return (
+        <div className="main-wrapper-index">
+            <Row gutter="16">
+                <Col span="8">
+                    <Card className="statistics-item">
+                        <Spin spinning={this.state.loading}><h3>{this.state.totalProduct}</h3></Spin>
+                        <h2>产品数量</h2>
+                    </Card> 
+                </Col>
+                <Col span="8">
+                    <Card className="statistics-item" style={{backgroundColor: '#66CCCC'}}>
+                        <Spin spinning={this.state.loading}><h3>{this.state.totalEmail}</h3></Spin>
+                        <h2>邮件总发送数量</h2>
+                    </Card> 
+                </Col>
+                <Col span="8">
+                    <Card className="statistics-item" style={{backgroundColor: '#66CC99'}}>
+                        <Spin spinning={this.state.loading}><h3>{this.state.monthEmail}</h3></Spin>
+                        <h2>本月邮件发送量</h2>
+                    </Card> 
+                </Col>
+                <Col span="12">
+                    <Card title={loginTitle} bordered={false} style={{marginTop:16}}>
+                        <Spin spinning={this.state.loading}>
+                            {this.state.loginContent}
+                        </Spin>
+                    </Card>
+                </Col>
+                <Col span="12">
+                    <Card title={smtpTitle} bordered={false} style={{marginTop:16}}>
+                        <Spin spinning={this.state.loading}>
+                            {this.state.smtpContent}
+                        </Spin>
+                    </Card>
+                </Col>
+                <Col span="24" style={{marginTop:16}}>
+                    <Card title={statisticsTitle} bordered={false}>
+                        <Spin spinning={this.state.loading}>
+                            <Row style={{fontWeight:'bold'}}>
+                                <Col span="12">业务员姓名</Col>
+                                <Col span="12">邮件发送数量</Col>
+                            </Row>
+                            {
+                                this.state.statistics.map(function(item){
+                                    return <Row className="index-money-item">
+                                        <Col span="12">{item.name}</Col>
+                                        <Col span="12">{item.num}</Col>
+                                    </Row>
+                                })
+                            }
+                        </Spin>
+                    </Card> 
+                </Col>
+            </Row>
+        </div>
+    );
+    },
+}),
+Footer = React.createClass({
+  render() {
+    return (
+      <div id="footer"><{:C('SITE_COPY')}></div>
+    );
+  },
+}),
+App = React.createClass({
+  render() {
+    return (
+      <div className="page-wrapper">
+          <Header />
+          <Main />
+          <Footer />
+      </div>
+    );
+  },
+});
+ReactDOM.render(
+    <App />,
+    document.getElementById('react-content')
+);
+</script>
+</body>
+</html>

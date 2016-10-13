@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><{$title}> - <{:C('SITE_TITLE')}></title>
+    <link rel="stylesheet" href="__PUBLIC__/js/antd/antd.min.css">
+    <link rel="stylesheet" href="__PUBLIC__/css/app.css">
+    <!--[if lt IE 10]>
+    <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+    <![endif]-->
+    <script src="__PUBLIC__/js/reactjs/react/react.min.js"></script>
+    <script src="__PUBLIC__/js/reactjs/react-dom/react-dom.js"></script>
+    <script src="__PUBLIC__/js/browser.min.js"></script>
+    <script src="__PUBLIC__/js/antd/antd.min.js"></script>
+    <script src="__PUBLIC__/js/jquery.min.js"></script>
+</head>
+<body>
+<div id="react-content"></div>
+<script type="text/babel">
+var {Row ,Col ,Menu ,Icon ,Button ,Modal ,message, Alert, Popconfirm,Form ,Table, Input ,InputNumber ,Radio,Select,Breadcrumb } = antd,
+    FormItem = Form.Item,
+    RadioGroup  = Radio.Group,
+    Option = Select.Option,
+Exit = React.createClass({
+  handleClick() {
+    Modal.confirm({
+      title: '确定要退出系统吗？',
+      onOk() {
+         window.location.href = '/Login/Out/Index';
+      },
+      onCancel() {},
+    });
+  },
+  render() {
+    return (
+      <div id="nav-exit"><a onClick={this.handleClick}>退出系统</a></div>
+    );
+  },
+}),
+Header = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.MODULE_NAME}>',
+    };
+  },
+  render() {
+    var modules = <{$modules}>;
+    return (
+      <div id="header" className="clearfix home-nav-white">
+          <Row>
+              <Col span="4">
+                  <a id="logo" href="/">
+                      <img alt="logo" src="__PUBLIC__/images/logo.svg" />
+                      <span><{:C('SITE_TITLE')}></span>
+                  </a>
+              </Col>
+              <Col span="20">
+                  <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="horizontal" id="nav">
+                      { modules.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}>{item.title}</a></Menu.Item> }) }
+                  </Menu>
+                  <Exit />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Left = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.CONTROLLER_NAME}>',
+    };
+  },
+  render() {
+    var controllers = <{$controllers}>;
+    return (
+      <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="inline" id="nav-aside">
+          { controllers.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}><Icon type={item.icon}/>{item.title}</a></Menu.Item> }) }
+      </Menu>  
+    );
+  },
+}),
+Right = React.createClass({
+    getInitialState() {
+        return {
+            data: {
+                smtp: {},
+                company: {},
+                auth: {},
+            },
+            loading: false
+        };
+    },
+    handleReset(e) {
+        e.preventDefault();
+        this.props.form.resetFields();
+    },
+    handleSubmit(e) {
+        e.preventDefault();
+        this.props.form.validateFieldsAndScroll(function(errors, values) {
+            if (!!errors) {
+                //console.log(errors);
+                return;
+            }
+            this.setState({ loading: true  });
+            $.ajax({
+                type: "POST",
+                url: "/System/Index/member",
+                data: values,
+                success: function(json){ 
+                    message[json.status](json.msg);
+                    this.setState({ loading: false  }); 
+                }.bind(this),
+                error: function(){
+                    message.error('服务器开了一会小差，稍后重试。');
+                    this.setState({ loading: false  }); 
+                }.bind(this)
+            });
+        }.bind(this));
+    },
+    componentDidMount() {
+        $.getJSON('/System/Index/getConfig', function(json){
+            this.setState({data:json});
+        }.bind(this));
+    },
+    checkSmtpHost(rule, value, callback, source){
+        source[rule.fullField] = $.trim(value);
+        if (source[rule.fullField] !== value)
+            this.props.form.setFieldsValue(source);
+        if (!source[rule.fullField]) {
+            callback([new Error('请填写邮件服务器')]);
+        } else {
+            callback();
+        }
+    },
+    checkSmtpPort(rule, value, callback, source){
+        value = parseInt(value, 10);
+        if (isNaN(value)) {
+            callback([new Error('端口号需为数字')]);
+        } else {
+            source[rule.fullField] = Math.abs(value);
+            this.props.form.setFieldsValue(source);
+            callback();
+        }
+    },
+    render() {
+    var { getFieldProps } = this.props.form,
+    smtpHostProps = getFieldProps('smtp_host', {initialValue: this.state.data.smtp.host}),
+    smtpPortProps = getFieldProps('smtp_port', {initialValue: this.state.data.smtp.port, rules: [{ validator: this.checkSmtpPort }]}),
+    smtpUsernameProps = getFieldProps('smtp_username', {initialValue: this.state.data.smtp.username, rules: [{ type: 'email', message:'邮箱账号格式不对'  }]}),
+    smtpPasswordProps = getFieldProps('smtp_password', {initialValue: this.state.data.smtp.password, rules: [
+        { whitespace: true,  min: 6, message: '邮箱密码至少为 6 个字符'}]}),
+    smtpEmailProps = getFieldProps('email', {initialValue: this.state.data.smtp.email, rules: [{ required: true, type: 'email', message:'邮箱格式不对'  }]}),
+    smtpAuthProps = getFieldProps('auth_password', {initialValue: this.state.data.auth.password, rules: [
+        { required: true, whitespace: true,  min: 6, message: '权限密码至少为 6 个字符'}]}),
+    noop = function() {return false;};
+    return (
+        <Form horizontal onSubmit={this.handleSubmit} form={this.props.form}>
+            <FormItem>
+                <h2>邮件配置</h2>
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="邮件服务器">
+                <Input {...smtpHostProps} placeholder="请输入邮件服务器" />
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="邮件服务器端口">
+                <Input {...smtpPortProps} placeholder="请输入邮件服务器端口" />
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="邮箱账号">
+                <Input {...smtpUsernameProps} placeholder="请输入邮箱账号" />
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="邮箱密码">
+                <Input {...smtpPasswordProps} placeholder="请输入邮箱密码" type="password" autoComplete="off" onPaste={noop} onCopy={noop} onCut={noop}/>
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="企业邮箱" hasFeedback>
+                <Input {...smtpEmailProps} placeholder="请输入企业邮箱" />
+            </FormItem>
+            <FormItem>
+                <h2>公司信息</h2>
+            </FormItem>
+            <FormItem  labelCol={{ span: 3 }} wrapperCol={{ span: 10 }} label="企业标语">
+                <Input type="textarea" {...getFieldProps('company_slogan', {initialValue: this.state.data.company.slogan, rules: [{ required: true, validator: this.removeWhiteSpace, message: '请填写企业标语' }]})}/>
+            </FormItem>
+            <FormItem  labelCol={{ span: 3 }} wrapperCol={{ span: 10 }} label="公司介绍">
+                <Input type="textarea" {...getFieldProps('company_desc', {initialValue: this.state.data.company.desc, rules: [{ required: true, validator: this.removeWhiteSpace, message: '请填写公司介绍' }]})}/>
+            </FormItem>
+            <FormItem  labelCol={{ span: 3 }} wrapperCol={{ span: 10 }} label="联系方式">
+                <Input type="textarea" {...getFieldProps('company_contact', {initialValue: this.state.data.company.contact, rules: [{ required: true, validator: this.removeWhiteSpace, message: '请填写联系方式' }]})} style={{height:80}} />
+            </FormItem>
+            <FormItem>
+                <h2>权限设置</h2>
+            </FormItem>
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 6 }} label="权限密码">
+                <Input {...smtpAuthProps} placeholder="请输入权限密码" type="password" autoComplete="off" onPaste={noop} onCopy={noop} onCut={noop}/>
+            </FormItem>
+            <FormItem wrapperCol={{ span: 22, offset: 3 }}>
+                <Button type="primary" loading={this.state.loading} htmlType="submit">提交</Button>
+                &nbsp;&nbsp;&nbsp;
+                <Button type="ghost" onClick={this.handleReset}>重置</Button>
+            </FormItem>
+        </Form>
+    );
+  },
+}),
+Right = Form.create()(Right),
+Main = React.createClass({
+  render() {
+    return (
+      <div className="main-wrapper">
+          <Row>
+              <Col span="4">
+                  <Left />
+              </Col>
+              <Col span="20" className="main-container">
+                  <h1><{$title}></h1>
+                  <Alert message="邮件服务器信息如果没有配置将使用系统默认的邮件转发配置。企业邮箱必须配置，用于接收采购商的反馈邮件。" type="warning" showIcon />
+                  <Right />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Footer = React.createClass({
+  render() {
+    return (
+      <div id="footer"><{:C('SITE_COPY')}></div>
+    );
+  },
+}),
+App = React.createClass({
+  render() {
+    return (
+      <div className="page-wrapper">
+          <Header />
+          <Main />
+          <Footer />
+      </div>
+    );
+  },
+});
+ReactDOM.render(
+    <App />,
+    document.getElementById('react-content')
+);
+</script>
+</body>
+</html>

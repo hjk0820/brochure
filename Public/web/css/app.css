@@ -1,0 +1,74 @@
+@charset "utf-8";
+body {
+	margin-bottom:4rem;
+}
+/*about*/
+#about-container .am-intro-hd {
+	 
+}
+/*email*/
+#email-container {
+    position:fixed;
+	background-color:#0e90d2;
+	bottom:0;
+	width:100%;
+	z-index:1030;
+}
+#email-container .am-form-group{
+	margin:0;
+	padding:0;
+}
+#email-container .am-form-group input {
+	width:100%;
+	border:0;
+}
+#sent-email{
+	margin:.5rem;
+}
+/*products*/
+#products-container {
+	background-color:#EEEEEE;	
+}
+#products-container .select {
+	position:absolute;
+	top:0;
+	left:1rem;
+	z-index:1020;
+	font-size:3rem;
+}
+#products-container .am-slider {
+	margin-bottom:1rem;
+}
+#products-container .am-control-thumbs li {
+	border:#DDDDDD solid 1px;
+}
+/*price*/
+@media only screen and (max-width:320px) {
+	.am-modal-dialog {
+		width: 310px;
+	}
+}
+@media only screen and (max-width:420px) {
+	.am-modal-dialog {
+		width: 350px;
+	}
+}
+#price-confirm td.column{
+	padding:0 1rem;
+	height:3rem;
+	line-height:3rem;
+	width:2rem;
+	text-align:left;
+}
+#price-confirm td.input{
+	padding:0;
+}
+#price-confirm td.input input {
+	height:3rem;
+	line-height:3rem;
+	margin:0;
+	padding:0 .8rem;
+	border:0;
+	background: #f8f8f8;
+}
+

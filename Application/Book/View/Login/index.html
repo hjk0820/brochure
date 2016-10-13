@@ -1,0 +1,114 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Enterprise Authorization</title>
+  
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <!--<link rel="icon" type="image/png" href="__PUBLIC__/images/favicon.png">-->
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <!--<link rel="icon" sizes="192x192" href="__PUBLIC__/images/app-icon72x72@2x.png">-->
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <!--<link rel="apple-touch-icon-precomposed" href="__PUBLIC__/images/app-icon72x72@2x.png">-->
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <!--<meta name="msapplication-TileImage" content="__PUBLIC__/images/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">-->
+
+  <link rel="stylesheet" href="__AMAZEUI__/css/amazeui.min.css">
+  <style>
+	.dialog-alert-btn {
+	    display: table-cell!important;
+	    padding: 0 5px;
+	    height: 44px;
+	    -webkit-box-sizing: border-box!important;
+	    box-sizing: border-box!important;
+	    font-size: 1.6rem;
+	    line-height: 44px;
+	    text-align: center;
+	    color: #0e90d2;
+	    overflow: hidden;
+	    cursor: pointer;
+	    border-right: 1px solid #dedede;
+	}
+	.error-msg {
+		color: #dd514c;
+	}
+  </style>
+</head>
+<body>
+<div class="am-modal am-modal-alert" id="dialog-alert">
+  <div class="am-modal-dialog">
+    <div class="am-modal-hd">Enter the authorization code Enterprise</div>
+    <div class="am-modal-bd">
+    	<form class="am-form">
+		<div class="am-form-group" id="form-group-staff" style="margin-bottom:0;">
+			<input name="password" type="password" placeholder="Enter the authorization code">
+		</div>
+		</form>
+    </div>
+    <div class="am-modal-footer">
+    	<span class="dialog-alert-btn">Log in</span>
+    </div>
+  </div>
+</div>
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="__AMAZEUI__/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="__AMAZEUI__/js/jquery.1.11.3.min.js"></script>
+<script src="__AMAZEUI__/js/modernizr.js"></script>
+<script src="__AMAZEUI__/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="__AMAZEUI__/js/amazeui.min.js"></script>
+<script>
+$(document).ready(function(){
+	var $password = $('input[name="password"]'),
+	$msg = $('#dialog-alert .am-modal-hd');
+	$('#dialog-alert').modal({closeOnConfirm:false, closeViaDimmer: false});
+	$('.dialog-alert-btn').on('click',function(){
+		var $this = $(this);
+		if ($this.hasClass('disabled'))
+			return false;
+		if ($password.val() == '') {
+			$msg.addClass('error-msg').html('Enter the authorization code');
+			return false;
+		}
+		$this.addClass('disabled');
+		$msg.removeClass('error-msg').html('Loging..');
+		$.ajax({
+			type: "POST",
+			url: "__SELF__",
+			data: {password:$password.val()},
+			success: function(json) {
+				if (json.status == 1) {
+					$msg.removeClass('error-msg').html(json.msg);
+					setTimeout(function(){window.location.href = json.url;}, 800);
+				} else {
+					$msg.addClass('error-msg').html(json.msg);
+					$this.removeClass('disabled');
+				}
+			},
+			error: function() {
+				$msg.addClass('error-msg').html('The server will open a small difference, please try again later.');
+				$this.removeClass('disabled');
+			}
+		});
+	});
+});
+</script>
+</body>
+</html>

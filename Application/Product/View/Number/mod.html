@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><{$title}> - <{:C('SITE_TITLE')}></title>
+    <link rel="stylesheet" href="__PUBLIC__/js/antd/antd.min.css">
+    <link rel="stylesheet" href="__PUBLIC__/css/app.css">
+    <!--[if lt IE 10]>
+    <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+    <![endif]-->
+    <script src="__PUBLIC__/js/reactjs/react/react.min.js"></script>
+    <script src="__PUBLIC__/js/reactjs/react-dom/react-dom.js"></script>
+    <script src="__PUBLIC__/js/browser.min.js"></script>
+    <script src="__PUBLIC__/js/antd/antd.min.js"></script>
+    <script src="__PUBLIC__/js/jquery.min.js"></script>
+</head>
+<body>
+<div id="react-content"></div>
+<script type="text/babel">
+var { Row ,Col ,Menu ,Icon ,Button ,Modal ,message, Form ,Input , Radio,Breadcrumb, Upload } = antd,
+    FormItem = Form.Item,
+    RadioGroup  = Radio.Group,
+Exit = React.createClass({
+  handleClick() {
+    Modal.confirm({
+      title: '确定要退出系统吗？',
+      onOk() {
+         window.location.href = '/Login/Out/Index';
+      },
+      onCancel() {},
+    });
+  },
+  render() {
+    return (
+      <div id="nav-exit"><a onClick={this.handleClick}>退出系统</a></div>
+    );
+  },
+}),
+Header = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.MODULE_NAME}>',
+    };
+  },
+  render() {
+    var modules = <{$modules}>;
+    return (
+      <div id="header" className="clearfix home-nav-white">
+          <Row>
+              <Col span="4">
+                  <a id="logo" href="/">
+                      <img alt="logo" src="__PUBLIC__/images/logo.svg" />
+                      <span><{:C('SITE_TITLE')}></span>
+                  </a>
+              </Col>
+              <Col span="20">
+                  <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="horizontal" id="nav">
+                      { modules.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}>{item.title}</a></Menu.Item> }) }
+                  </Menu>
+                  <Exit />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Left = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.CONTROLLER_NAME}>',
+    };
+  },
+  render() {
+    var controllers = <{$controllers}>;
+    return (
+      <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="inline" id="nav-aside">
+          { controllers.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}><Icon type={item.icon}/>{item.title}</a></Menu.Item> }) }
+      </Menu>  
+    );
+  },
+}),
+Right = React.createClass({
+  getInitialState() {
+    return {
+        imageList: <{:json_encode($rs['imageList'])}>,
+        images: ["<{$rs['image']}>"],
+        model: {visible:false, title: '', image: ''},
+        loading: false,
+    };
+  },
+  handleSubmit(e) {
+    e.preventDefault();
+    this.props.form.validateFields(function(errors, values) {
+    if (!!errors) {
+        //console.log(errors);
+        return;
+    }
+    if (this.state.imageList.length) {//仅取最后一张图片
+        values.image = this.state.imageList[0].url;
+    }
+    values.images = this.state.images;
+    this.setState({ loading: true  });
+        $.ajax({
+            type: "POST",
+            url: "__SELF__",
+            data: values,
+              success: function(json){ 
+                    message[json.status](json.msg);
+                    if (json.status === 'success') {
+                        setTimeout(function() {window.location.href = '<{$backurl}>';}, 800);
+                    } else {
+                        this.setState({ loading: false  }); 
+                    }
+        }.bind(this),
+        error: function(){
+            message.error('服务器开了一会小差，稍后重试。');
+            this.setState({ loading: false  }); 
+        }.bind(this)
+        });
+    }.bind(this));
+  },
+  checkTitle(rule, value, callback, source){
+      source[rule.fullField] = $.trim(value);
+      if (source[rule.fullField] !== value)
+          this.props.form.setFieldsValue(source);
+      if (!source[rule.fullField]) {
+          callback([new Error('请填写页码名称')]);
+      } else {
+          callback();
+      }
+  },
+  checkSort(rule, value, callback, source){
+      value = parseInt(value, 10);
+      source[rule.fullField] = isNaN(value) ? 0 : Math.abs(value);
+      this.props.form.setFieldsValue(source);
+      callback();
+  },
+    handleImageChange(info) {
+        var imageList,images;
+        if (info.file.status === 'done') {
+            imageList = this.state.imageList;
+            if (info.file.response.status === 'success') {
+                info.file.url = info.file.response.url;
+                imageList = this.state.imageList;
+                imageList[0] = info.file;
+                images = this.state.images;
+                images.push(info.file.url);
+                this.setState({ imageList:imageList,images:images });
+            } else if (info.file.response.status === 'error') {
+                message.error(info.file.response.msg);
+                this.setState({ imageList:imageList });
+                return false;
+            }
+        } else if(info.file.status === 'error') {
+            message.error(info.file.name + '上传失败。');
+        }
+    },
+    handleOnPriview(file) {
+        var model = this.state.model;
+        model.visible = true;
+        model.title = file.name;
+        model.image = file.url + '_488x320';
+        this.setState({model:model});
+    },
+    handleModelCancel() {
+        var model = this.state.model;
+        model.visible = false;
+        this.setState({model:model});
+    },
+  render() {
+    var { getFieldProps } = this.props.form,
+    imageProps = {
+        action: "/Upload/Number/index",
+        listType: "picture-card",
+        fileList: this.state.imageList,
+        onChange: this.handleImageChange,
+        onPreview: this.handleOnPriview,
+        beforeUpload(file) {
+            var allowType = ['image/jpeg','image/gif','image/png'];
+            if (allowType.indexOf(file.type) === -1) {
+                message.error('上传的文件格式不正确！');
+                return false;
+            }
+            if (file.size > <{:C('UPLOAD_LIMIT_SIZE')}>*1024*1024) {
+                message.error('上传的文件大小超过限制');
+                return false;
+            }
+            return true;
+        }
+    };
+    return (
+        <Form horizontal onSubmit={this.handleSubmit} form={this.props.form}>
+            <FormItem  labelCol={{ span: 2 }} wrapperCol={{ span: 6 }} label="页码名称" hasFeedback>
+                <Input {...getFieldProps('title', {initialValue: "<{$rs['title']}>", rules: [{ required: true, validator: this.checkTitle }]})} placeholder="请输入页码名称" />
+            </FormItem>
+            <FormItem labelCol={{ span: 2 }} wrapperCol={{ span: 12 }}  label="扫码图片" help="支持JPG，GIF，PNG，JPEG格式。大小不能超过<{:C('UPLOAD_LIMIT_SIZE')}>M。">
+                <Upload {...imageProps}>
+                    <Icon type="plus" />
+                    <div className="ant-upload-text">上传照片</div>
+                </Upload>
+                <Modal visible={this.state.model.visible}  footer={null} onCancel={this.handleModelCancel}>
+                    <img alt={this.state.model.title} src={this.state.model.image} />
+                </Modal>
+            </FormItem>
+            <FormItem  labelCol={{ span: 2 }} wrapperCol={{ span: 3 }} label="排序号" help="序号越小排在越前" hasFeedback>
+                <Input {...getFieldProps('sort', {initialValue: <{$rs['sort']}>, rules: [{ required: true, validator: this.checkSort }]})} placeholder="请输入排序号" />
+            </FormItem>
+            <FormItem wrapperCol={{ span: 22, offset: 2 }}>
+                <Button type="primary" loading={this.state.loading} htmlType="submit">提交</Button>
+            </FormItem>
+        </Form>
+    );
+  },
+}),
+Right = Form.create()(Right),
+Main = React.createClass({
+  render() {
+    return (
+      <div className="main-wrapper">
+          <Row>
+              <Col span="4">
+                  <Left />
+              </Col>
+              <Col span="20" className="main-container">
+                  <h1><{$title}></h1>
+                    <Breadcrumb>
+                        <Breadcrumb.Item>
+                            <a href="<{$moduleBread['url']}>"><{$moduleBread['title']}></a>
+                        </Breadcrumb.Item>
+                        <Breadcrumb.Item>
+                            <a href="<{$controllerBread['url']}>"><{$controllerBread['title']}></a>
+                        </Breadcrumb.Item>
+                        <Breadcrumb.Item><{$title}></Breadcrumb.Item>
+                    </Breadcrumb>
+                  <Right />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Footer = React.createClass({
+  render() {
+    return (
+      <div id="footer"><{:C('SITE_COPY')}></div>
+    );
+  },
+}),
+App = React.createClass({
+  render() {
+    return (
+      <div className="page-wrapper">
+          <Header />
+          <Main />
+          <Footer />
+      </div>
+    );
+  },
+});
+ReactDOM.render(
+    <App />,
+    document.getElementById('react-content')
+);
+</script>
+</body>
+</html>

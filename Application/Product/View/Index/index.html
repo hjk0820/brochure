@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><{$title}> - <{:C('SITE_TITLE')}></title>
+    <link rel="stylesheet" href="__PUBLIC__/js/antd/antd.min.css">
+    <link rel="stylesheet" href="__PUBLIC__/css/app.css">
+    <!--[if lt IE 10]>
+    <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+    <![endif]-->
+    <script src="__PUBLIC__/js/reactjs/react/react.min.js"></script>
+    <script src="__PUBLIC__/js/reactjs/react-dom/react-dom.js"></script>
+    <script src="__PUBLIC__/js/browser.min.js"></script>
+    <script src="__PUBLIC__/js/antd/antd.min.js"></script>
+    <script src="__PUBLIC__/js/jquery.min.js"></script>
+</head>
+<body>
+<div id="react-content"></div>
+<script type="text/babel">
+var { Row, Col, Menu, Icon, Button, Modal, Alert, Popconfirm, message, Tooltip, Card, Form, Table, Select, Input, Radio,Badge } = antd,
+    FormItem = Form.Item,
+  RadioGroup  = Radio.Group,
+Exit = React.createClass({
+  handleClick() {
+    Modal.confirm({
+      title: '确定要退出系统吗？',
+      onOk() {
+       window.location.href = '/Login/Out/Index';
+      },
+      onCancel() {},
+    });
+  },
+  render() {
+    return (
+      <div id="nav-exit"><a onClick={this.handleClick}>退出系统</a></div>
+    );
+  },
+}),
+Header = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.MODULE_NAME}>',
+    };
+  },
+  render() {
+  var modules = <{$modules}>;
+    return (
+      <div id="header" className="clearfix home-nav-white">
+          <Row>
+              <Col span="4">
+                  <a id="logo" href="/">
+                      <img alt="logo" src="__PUBLIC__/images/logo.svg" />
+                      <span><{:C('SITE_TITLE')}></span>
+                  </a>
+              </Col>
+              <Col span="20">
+                  <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="horizontal" id="nav">
+                      { modules.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}>{item.title}</a></Menu.Item> }) }
+                  </Menu>
+          <Exit />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Left = React.createClass({
+  getInitialState() {
+    return {
+      current: '<{$Think.CONTROLLER_NAME}>',
+    };
+  },
+  render() {
+  var controllers = <{$controllers}>;
+    return (
+    <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="inline" id="nav-aside">
+      { controllers.map(function(item, index){ return <Menu.Item key={item.key}><a href={item.url}><Icon type={item.icon}/>{item.title}</a></Menu.Item> }) }
+    </Menu>  
+    );
+  },
+}),
+Right = React.createClass({
+    getInitialState() {
+        return {
+            oldData: [],
+            data: [],
+            pagination : {},
+            loading: true,
+            selectedRowKeys: [],
+            hasSelected: false,
+        };
+    },
+    componentDidMount() {
+        $.getJSON('/Product/Index/getList', function(json){
+          var total = json.length,
+          pagination = {
+                total: total,
+                pageSize: <{$pageSize}>,
+                current: this.getCurrentPage(total),
+                showTotal: function(){
+                    return '共 '+this.total+' 条记录，每页显示 '+ this.pageSize +' 条记录，第 '+this.current+' 页 / 共 '+Math.ceil(this.total / this.pageSize)+' 页';
+                },
+                onChange: function(current){
+                    var pagination = this.state.pagination;
+                    pagination.current = current
+                    this.setState({pagination: pagination});
+                }.bind(this)
+          };
+          this.setState({ loading: false, oldData: json, data: json, pagination: pagination });
+        }.bind(this));
+    },
+    initColumns() {
+        return [
+            {title: 'ID', width:50, dataIndex: 'id'},
+            {title: '缩略图', width:68, render: (text, record) => (
+                <img src={record.image} alt={record.title} />
+            )},
+            {title: '产品名称', dataIndex: 'title'},
+            {title: '分类', dataIndex: 'category'},
+            {title: '页码', dataIndex: 'number'},
+            {title: '排序号', width:60, dataIndex: 'sort'},
+            {title: '添加时间', width:85, dataIndex: 'addtime'},
+            {title: '操作', width:75, key: 'operation', render: (text, record) => (
+              <span>
+                <a onClick={()=>this.mod(record.id)}>修改</a>
+                <span className="ant-divider"></span>
+                <Popconfirm title="确定要删除吗？" placement="topRight" onConfirm={()=>this.remove(record.id)}>
+                    <a>删除</a>
+                </Popconfirm>
+              </span>
+            )}, 
+        ];
+    },
+    getCurrentPage(total) {
+        var totalPage = Math.ceil(total / <{$pageSize}>),
+        page = <{$page}>;
+        if (this.state.pagination.current)
+            page = this.state.pagination.current;
+        return page > totalPage ? totalPage : page;
+    },
+    add() {
+      var url = '/Product/Index/add'
+      if (this.state.page >1)
+          url = url + '/page/' + this.state.page;
+      window.location.href = url; 
+    },
+    mod(id) {
+      var url = '/Product/Index/mod/id/'+id;
+      if (this.state.page >1)
+          url = url + '/page/' + this.state.page;
+      window.location.href = url;
+    },
+    remove(id) {
+        $.ajax({
+            type: "GET",
+            url: "/Product/Index/del",
+            data: {id:id},
+            success: function(json){
+                var data,pagination;
+                message[json.status](json.msg);
+                if (json.status === 'success') {
+                    data = this.state.oldData.filter(function(item){ return  item.id !== id;});
+                    pagination = this.state.pagination;
+                    pagination.total = data.length
+                    pagination.current = this.getCurrentPage(pagination.total);
+                    this.props.form.setFieldsValue({title:"",cid:"0",uid:"0"});
+                    this.setState({data: data, oldData: data, pagination: pagination});
+                }
+            }.bind(this),
+            error: function(){
+              message.error('服务器开了一会小差，稍后重试。');
+            }
+        });
+    },
+    batchDelete() {
+        var ids = this.state.selectedRowKeys;
+        this.setState({ hasSelected: true });
+        $.ajax({
+            type: "POST",
+            url: "/Product/Index/batchDelete",
+            data: {ids:ids},
+            success: function(json){
+                var data,pagination;
+                message[json.status](json.msg);
+                if (json.status === 'success') {
+                    data = this.state.oldData.filter(function(item){ return ids.indexOf(item.id) == -1;});
+                    pagination = this.state.pagination;
+                    pagination.total = data.length
+                    pagination.current = this.getCurrentPage(pagination.total);
+                    this.props.form.setFieldsValue({title:"",cid:"0",uid:"0"});
+                    this.setState({data: data, oldData: data, pagination: pagination,selectedRowKeys: [],hasSelected: false});
+                }
+            }.bind(this),
+            error: function(){
+              message.error('服务器开了一会小差，稍后重试。');
+            }
+        });
+    },
+    handleSubmit(e) {
+        var data,pagination,values;
+        e.preventDefault();
+        data = this.state.oldData;
+        pagination = this.state.pagination;
+        values = this.props.form.getFieldsValue();
+        values.title = $.trim(values.title);
+        data = data.filter(function(item){
+            if (values.title) {
+                if (item.title.indexOf(values.title) === -1)
+                    return false;
+            }
+            if (values.cid !== "0") {
+                if (item.cid !== values.cid)
+                    return false;
+            }
+            if (values.nid !== "0") {
+                if (item.nid !== values.nid)
+                    return false;
+            }
+            return true;
+        });
+        pagination.total = data.length;
+        pagination.current = 1;
+        this.setState({data:data,pagination:pagination,selectedRowKeys: [],hasSelected: false,});
+    },
+    onSelectChange(selectedRowKeys) {
+        this.setState({ selectedRowKeys:selectedRowKeys });
+    },
+    render() {
+        var { getFieldProps } = this.props.form,
+        rowSelection = {selectedRowKeys:this.state.selectedRowKeys,onChange:this.onSelectChange},
+        hasSelected = this.state.selectedRowKeys.length > 0;
+        return (
+          <div>
+            <Form inline onSubmit={this.handleSubmit} form={this.props.form} style={{marginBottom:16}}>
+            <FormItem label="产品名称">
+                <Input {...getFieldProps('title')} placeholder="请输入产品名称" />
+            </FormItem>
+            <FormItem label="分类">
+                <Select {...getFieldProps('cid',{initialValue:"0"})} showSearch optionFilterProp="children" notFoundContent="没有该分类" style={{width:145}}>
+                    <Option value="0">全部</Option>
+                    <?php foreach ($category as $key=>$val) {?>
+                        <Option value="<?php echo $key;?>"><?php echo $val;?></Option>
+                    <?php }?>
+                </Select>
+            </FormItem>
+            <FormItem label="页码">
+                <Select {...getFieldProps('nid',{initialValue:"0"})} showSearch optionFilterProp="children" notFoundContent="没有该页码" style={{width:145}}>
+                    <Option value="0">全部</Option>
+                    <?php foreach ($number as $key=>$val) {?>
+                        <Option value="<?php echo $key;?>"><?php echo $val;?></Option>
+                    <?php }?>
+                </Select>
+            </FormItem>
+            <Button type="primary" htmlType="submit">搜索</Button>
+            <Button type="primary" onClick={this.add} style={{marginLeft:10}}>添加</Button>
+            <Badge count={this.state.selectedRowKeys.length}>
+            <Button type="primary" onClick={this.batchDelete} disabled={!hasSelected} loading={this.state.hasSelected} style={{marginLeft:10}}>删除</Button></Badge>
+            
+          </Form>
+          <Table className="userTable" rowSelection={rowSelection} columns={this.initColumns()} dataSource={this.state.data} loading={this.state.loading} pagination={this.state.pagination} size="middle" /></div>
+        );
+    },
+}),
+Right = Form.create()(Right),
+Main = React.createClass({
+  render() {
+    return (
+      <div className="main-wrapper">
+          <Row>
+              <Col span="4">
+                  <Left />
+              </Col>
+              <Col span="20" className="main-container">
+                <h1><{$title}></h1>
+                <Right />
+              </Col>
+          </Row>
+      </div>
+    );
+  },
+}),
+Footer = React.createClass({
+  render() {
+    return (
+      <div id="footer"><{:C('SITE_COPY')}></div>
+    );
+  },
+}),
+App = React.createClass({
+  render() {
+    return (
+      <div className="page-wrapper">
+          <Header />
+          <Main />
+          <Footer />
+      </div>
+    );
+  },
+});
+ReactDOM.render(
+    <App />,
+    document.getElementById('react-content')
+);
+</script>
+</body>
+</html>
